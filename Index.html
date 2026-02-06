@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ruhit 18 🔥 Burning Fire</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Arial Black', sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      position: relative;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 8rem;
+      color: transparent;
+      background: linear-gradient(180deg, #ff9800, #f44336 30%, #b71c1c 70%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      text-shadow: 
+        0 0 20px #ff5722,
+        0 0 40px #f44336,
+        0 0 80px #b71c1c;
+      animation: burn 3s infinite alternate, flicker 0.15s infinite;
+      letter-spacing: 5px;
+    }
+
+    .subtitle {
+      font-size: 3rem;
+      color: #ff9800;
+      margin-top: -20px;
+      text-shadow: 0 0 30px #ff5722;
+      animation: glow 2s infinite alternate;
+    }
+
+    /* Flames behind text */
+    .flames {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .flame {
+      position: absolute;
+      bottom: -100px;
+      width: 60px;
+      height: 200px;
+      background: radial-gradient(circle at 50% 100%, #ff9800 0%, transparent 70%);
+      border-radius: 50% 50% 0 0;
+      opacity: 0.8;
+      filter: blur(8px);
+      animation: rise 4s infinite linear;
+    }
+
+    .flame:nth-child(1) { left: 20%; animation-delay: 0s; background: #ff5722; }
+    .flame:nth-child(2) { left: 40%; animation-delay: 1s; background: #f44336; width: 80px; }
+    .flame:nth-child(3) { left: 60%; animation-delay: 2s; background: #ff1744; }
+    .flame:nth-child(4) { left: 80%; animation-delay: 0.5s; background: #ff9800; width: 50px; }
+
+    /* Sparks */
+    .spark {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 15px #fff;
+      opacity: 0;
+      animation: spark 2.5s infinite;
+    }
+
+    .spark:nth-child(5) { left: 25%; animation-delay: 0.2s; }
+    .spark:nth-child(6) { left: 45%; animation-delay: 1.2s; }
+    .spark:nth-child(7) { left: 65%; animation-delay: 0.8s; }
+    .spark:nth-child(8) { left: 75%; animation-delay: 1.8s; }
+
+    @keyframes burn {
+      0% { transform: scale(1) skew(0deg); }
+      50% { transform: scale(1.05) skew(2deg); }
+      100% { transform: scale(1) skew(-2deg); }
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.95; }
+    }
+
+    @keyframes glow {
+      0% { text-shadow: 0 0 20px #ff5722; }
+      100% { text-shadow: 0 0 50px #f44336; }
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0) scaleY(1); opacity: 0.8; }
+      100% { transform: translateY(-400px) scaleY(1.5); opacity: 0; }
+    }
+
+    @keyframes spark {
+      0% { transform: translateY(0) scale(0.5); opacity: 0; }
+      20% { opacity: 1; transform: scale(1.5); }
+      100% { transform: translateY(-300px) translateX(50px) scale(0); opacity: 0; }
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 5rem; }
+      .subtitle { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>RUHIT</h1>
+    <p class="subtitle">18 🔥</p>
+
+    <div class="flames">
+      <div class="flame"></div>
+      <div class="flame"></div>
+      <div class="flame"></div>
+      <div class="flame"></div>
+      <div class="spark"></div>
+      <div class="spark"></div>
+      <div class="spark"></div>
+      <div class="spark"></div>
+    </div>
+  </div>
+
+</body>
+</html>
