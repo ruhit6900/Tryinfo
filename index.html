@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Logo Maker with Undo</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Fredoka+One&family=Roboto+Slab&family=Courier+Prime&family=Indie+Flower&family=Lobster&family=Playfair+Display&family=Baloo+2&display=swap" rel="stylesheet">
+<style>
+body{
+  margin:0;
+  font-family:'Roboto',sans-serif;
+  background:#f0f0f0;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+h1{
+  font-family:'Fredoka One',cursive;
+  text-align:center;
+  margin:10px 0;
+  font-size:6vw;
+}
+#logoContainer{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  height:50vh;
+  background: linear-gradient(135deg,#89f7fe 0%,#66a6ff 100%);
+  overflow:hidden;
+}
+#bgLayer{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background-size:cover;background-position:center;z-index:0;
+}
+.text-layer,.png-layer{
+  position:absolute;cursor:move;user-select:none;
+}
+.text-layer{
+  z-index:1;font-weight:bold;text-shadow:2px 2px 10px rgba(0,0,0,0.5);
+  left:50%;top:50%;transform:translate(-50%,-50%) rotate(0deg);text-align:center;max-width:90%;
+}
+.png-layer{
+  z-index:2;
+}
+.png-layer img{
+  max-width:120px;max-height:120px;
+}
+#settingsPanel{
+  flex:1;
+  background:#fff;
+  padding:10px;
+  overflow-y:auto;
+}
+input,select,button,input[type="range"]{
+  width:100%;padding:8px;margin:5px 0;font-size:4vw;border-radius:8px;border:none;
+}
+button{background:red;color:white;cursor:pointer;}
+.slider-container{display:flex;align-items:center;justify-content:space-between;}
+</style>
+</head>
+<body>
+<h1>Logo Maker</h1>
+<div id="logoContainer">
+  <div id="bgLayer"></div>
+</div>
+
+<div id="settingsPanel">
+  <h2>Background</h2>
+  <input type="file" id="bgUpload" accept="image/*">
+
+  <h2>Text Layer</h2>
+  <input type="text" id="textInput" placeholder="Enter text">
+  <select id="fontSelect">
+    <option value="Pacifico">Pacifico</option>
+    <option value="Fredoka One">Fredoka One</option>
+    <option value="Roboto Slab">Roboto Slab</option>
+    <option value="Courier Prime">Courier Prime</option>
+    <option value="Indie Flower">Indie Flower</option>
+    <option value="Lobster">Lobster</option>
+    <option value="Playfair Display">Playfair Display</option>
+    <option value="Baloo 2">Baloo 2</option>
+    <option value="Arial">Arial</option>
+    <option value="Verdana">Verdana</option>
+  </select>
+  <input type="color" id="colorPicker1" value="#ff5722">
+  <input type="color" id="colorPicker2" value="#ffcc00">
+  <div class="slider-container"><label>Size</label><input type="range" id="sizeRange" min="5" max="30" value="12"></div>
+  <div class="slider-container"><label>Rotate</label><input type="range" id="rotateRange" min="-180" max="180" value="0"></div>
+  <button onclick="addTextLayer()">Add Text Layer</button>
+
+  <h2>PNG Layer</h2>
+  <input type="file" id="pngUpload" accept="image/*">
+  <select id="pngEffect">
+    <option value="none">No Effect</option>
+    <option value="fire">Fire</option>
+    <option value="moonlight">Moonlight</option>
+    <option value="darkness">Darkness</option>
+  </select>
+  <div class="slider-container"><label>Size</label><input type="range" id="pngSizeRange" min="50" max="200" value="120"></div>
+  <div class="slider-container"><label>Rotate</label><input type="range" id="pngRotateRange" min="-180" max="180" value="0"></div>
+  <button onclick="addPngLayer()">Add PNG Layer</button>
+
+  <h2>Move Layer</h2>
+  <div style="display:flex;justify-content:space-around;">
+    <button onclick="moveActive('up')">⬆️</button>
+    <button onclick="moveActive('left')">⬅️</button>
+    <button onclick="moveActive('down')">⬇️</button>
+    <button onclick="moveActive('right')">➡️</button>
+  </div>
+
+  <div style="display:flex;justify-content:space-around;margin-top:5px;">
+    <button onclick="undo()">↩️ Undo</button>
+    <button onclick="redo()">↪️ Redo</button>
+  </div>
+
+  <button onclick="downloadLogo()">⬇️ Download Logo</button>
+</div>
+
+<script>
+const logoContainer=document.getElementById('logoContainer');
+let activeLayer=null;
+let undoStack=[],redoStack=[];
+
+/* ---------------- BACKGROUND ---------------- */
+document.getElementById('bgUpload').onchange=function(e){
+  const file=e.target.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    saveState();
+    document.getElementById('bgLayer').style.backgroundImage=`url(${ev.target.result})`;
+  }
+  reader.readAsDataURL(file);
+}
+
+/* ---------------- TEXT ---------------- */
+function addTextLayer(){
+  const text=document.getElementById('textInput').value;
+  if(text.trim()===""){alert("Enter text!");return;}
+  saveState();
+  const layer=document.createElement('div');
+  layer.className='text-layer';
+  layer.innerText=text.toUpperCase();
+  layer.style.fontFamily=document.getElementById('fontSelect').value;
+  const color1=document.getElementById('colorPicker1').value;
+  const color2=document.getElementById('colorPicker2').value;
+  layer.style.background=`linear-gradient(45deg, ${color1}, ${color2})`;
+  layer.style.webkitBackgroundClip='text';
+  layer.style.webkitTextFillColor='transparent';
+  layer.style.fontSize=document.getElementById('sizeRange').value+'vw';
+  layer.style.transform=`translate(-50%,-50%) rotate(${document.getElementById('rotateRange').value}deg)`;
+  layer.onclick=()=>{ activeLayer=layer; }
+  layer.onmousedown=dragMouseDown;
+  logoContainer.appendChild(layer);
+  activeLayer=layer;
+}
+
+/* ---------------- PNG ---------------- */
+function addPngLayer(){
+  const file=document.getElementById('pngUpload').files[0];
+  if(!file){alert("Upload PNG first!");return;}
+  saveState();
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const layer=document.createElement('div');
+    layer.className='png-layer';
+    const img=document.createElement('img');
+    img.src=e.target.result;
+
+    const effect=document.getElementById('pngEffect').value;
+    if(effect==='fire') img.style.filter='hue-rotate(0deg) brightness(1.2) saturate(2)';
+    if(effect==='moonlight') img.style.filter='brightness(1.5) contrast(1.2) saturate(0.8)';
+    if(effect==='darkness') img.style.filter='brightness(0.5) contrast(1.2) saturate(0.5)';
+
+    img.style.width=document.getElementById('pngSizeRange').value+'px';
+    img.style.height='auto';
+
+    layer.appendChild(img);
+    layer.style.left='50%';
+    layer.style.top='50%';
+    layer.style.transform=`translate(-50%,-50%) rotate(${document.getElementById('pngRotateRange').value}deg)`;
+    layer.onclick=()=>{ activeLayer=layer; }
+    layer.onmousedown=dragMouseDown;
+    logoContainer.appendChild(layer);
+    activeLayer=layer;
+  }
+  reader.readAsDataURL(file);
+}
+
+/* ---------------- DRAG ---------------- */
+function dragMouseDown(e){
+  activeLayer=e.target.closest('.text-layer,.png-layer');
+  if(!activeLayer) return;
+  saveState();
+  let offsetX=e.clientX-activeLayer.offsetLeft;
+  let offsetY=e.clientY-activeLayer.offsetTop;
+  function move(e){
+    let x=e.clientX-offsetX;
+    let y=e.clientY-offsetY;
+    const rect=logoContainer.getBoundingClientRect();
+    x=Math.max(0,Math.min(rect.width-activeLayer.offsetWidth,x));
+    y=Math.max(0,Math.min(rect.height-activeLayer.offsetHeight,y));
+    activeLayer.style.left=x+'px';
+    activeLayer.style.top=y+'px';
+    activeLayer.style.transform='none';
+  }
+  function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);}
+  document.addEventListener('mousemove',move);
+  document.addEventListener('mouseup',up);
+}
+
+/* ---------------- MOVE ---------------- */
+function moveActive(dir){
+  if(!activeLayer) return;
+  saveState();
+  const rect=logoContainer.getBoundingClientRect();
+  let left=parseFloat(activeLayer.offsetLeft);
+  let top=parseFloat(activeLayer.offsetTop);
+  const step=10;
+  if(dir==='up') top-=step;
+  if(dir==='down') top+=step;
+  if(dir==='left') left-=step;
+  if(dir==='right') left+=step;
+  left=Math.max(0,Math.min(rect.width-activeLayer.offsetWidth,left));
+  top=Math.max(0,Math.min(rect.height-activeLayer.offsetHeight,top));
+  activeLayer.style.left=left+'px';
+  activeLayer.style.top=top+'px';
+  activeLayer.style.transform='none';
+}
+
+/* ---------------- UNDO/REDO ---------------- */
+function saveState(){
+  const html=logoContainer.innerHTML;
+  undoStack.push(html);
+  if(undoStack.length>50) undoStack.shift();
+}
+function undo(){
+  if(undoStack.length===0) return;
+  redoStack.push(logoContainer.innerHTML);
+  const prev=undoStack.pop();
+  logoContainer.innerHTML=prev;
+}
+function redo(){
+  if(redoStack.length===0) return;
+  undoStack.push(logoContainer.innerHTML);
+  const next=redoStack.pop();
+  logoContainer.innerHTML=next;
+}
+
+/* ---------------- DOWNLOAD ---------------- */
+function downloadLogo(){
+  const canvas=document.createElement('canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=800;canvas.height=400;
+  const bgLayer=document.getElementById('bgLayer');
+  const bgImage=new Image();
+  if(bgLayer.style.backgroundImage){
+    bgImage.src=bgLayer.style.backgroundImage.slice(5,-2);
+    bgImage.onload=()=>drawCanvas(ctx,canvas,bgImage);
+  }else{
+    ctx.fillStyle='#89f7fe';ctx.fillRect(0,0,canvas.width,canvas.height);
+    drawCanvas(ctx,canvas,null);
+  }
+}
+function drawCanvas(ctx,canvas,bgImage){
+  if(bgImage) ctx.drawImage(bgImage,0,0,canvas.width,canvas.height);
+  const layers=document.querySelectorAll('.text-layer,.png-layer');
+  layers.forEach(layer=>{
+    if(layer.classList.contains('text-layer')){
+      ctx.font=`bold ${parseInt(window.getComputedStyle(layer).fontSize)}px ${window.getComputedStyle(layer).fontFamily}`;
+      const gradient=ctx.createLinearGradient(0,0,canvas.width,0);
+      const bg=layer.style.background.split(',');
+      gradient.addColorStop(0,bg[0].split('(')[1]);
+      gradient.addColorStop(1,bg[1].split(')')[0]);
+      ctx.fillStyle=gradient;
+      const rect=layer.getBoundingClientRect();
+      const containerRect=document.getElementById('logoContainer').getBoundingClientRect();
+      const x=rect.left-containerRect.left+rect.width/2;
+      const y=rect.top-containerRect.top+rect.height/2;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(layer.innerText,x*(canvas.width/containerRect.width),y*(canvas.height/containerRect.height));
+    }else{
+      const img=layer.querySelector('img');
+      const rect=layer.getBoundingClientRect();
+      const containerRect=document.getElementById('logoContainer').getBoundingClientRect();
+      const x=(rect.left-containerRect.left);
+      const y=(rect.top-containerRect.top);
+      ctx.drawImage(img,x*(canvas.width/containerRect.width),y*(canvas.height/containerRect.height),
+        rect.width*(canvas.width/containerRect.width),rect.height*(canvas.height/containerRect.height));
+    }
+  });
+  const link=document.createElement('a');link.download='logo.png';link.href=canvas.toDataURL();link.click();
+}
+</script>
+</body>
+</html>
+
+
